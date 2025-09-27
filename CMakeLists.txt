@@ -9,8 +9,7 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 # Collect sources
 set(SOURCES
     src/Row.cpp
-    src/Page.cpp
-    src/TableFile.cpp
+    src/Schema.cpp
     main.cpp
 )
 

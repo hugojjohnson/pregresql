@@ -1,35 +1,76 @@
 #include "../include/Row.hpp"
-#include <cstring>
+#include "../include/Schema.hpp"
+#include <string>
+#include <variant>
+#include <vector>
 
-Row::Row(const std::vector<std::string> &values) {
-  for (const auto &v : values) {
-    uint32_t len = (uint32_t)(v.size());
-    data.insert(data.end(), reinterpret_cast<uint8_t *>(&len), reinterpret_cast<uint8_t *>(&len) + sizeof(len));
-    data.insert(data.end(), v.begin(), v.end());
+// Accessors
+const Row::FieldValue &Row::getField(size_t index) const { return values[index]; }
+void Row::setField(size_t index, FieldValue val) { values[index] = val; }
+
+// Serialize row into bytes (fixed-width)
+std::vector<uint8_t> Row::serialize(const Schema &schema) const {
+  std::vector<uint8_t> buffer;
+  for (size_t i = 0; i < values.size(); ++i) {
+    const auto &f = schema.getField(i);
+    const auto &val = values[i];
+
+    switch (f.type) {
+    case Schema::FieldType::INT: {
+      int v = std::get<int>(val);
+      uint8_t *p = reinterpret_cast<uint8_t *>(&v);
+      buffer.insert(buffer.end(), p, p + sizeof(int));
+      break;
+    }
+    case Schema::FieldType::FLOAT: {
+      float v = std::get<float>(val);
+      uint8_t *p = reinterpret_cast<uint8_t *>(&v);
+      buffer.insert(buffer.end(), p, p + sizeof(float));
+      break;
+    }
+    case Schema::FieldType::STRING: {
+      const std::string &s = std::get<std::string>(val);
+      uint8_t len = static_cast<uint8_t>(s.size());
+      buffer.push_back(len); // actual length
+      buffer.insert(buffer.end(), s.begin(), s.end());
+      // padding
+      buffer.insert(buffer.end(), f.maxStringLength - len, 0);
+      break;
+    }
+    }
   }
+  return buffer;
 }
 
-Row Row::deserialize(const std::vector<std::uint8_t> &buffer, size_t &offset) {
+// Deserialize bytes into a Row
+Row Row::deserialize(const Schema &schema, const uint8_t *data) {
   Row row;
-  while (offset < buffer.size()) {
-    if (offset + sizeof(uint32_t) > buffer.size()) {
-        break;
+  size_t offset = 0;
+
+  for (size_t i = 0; i < schema.getNumFields(); ++i) {
+    const Schema::Field &f = schema.getField(i);
+    switch (f.type) {
+    case Schema::FieldType::INT: {
+      int v = *reinterpret_cast<const int *>(data + offset);
+      row.values.push_back(v);
+      offset += sizeof(int);
+      break;
     }
-
-    uint32_t len;
-    std::memcpy(&len, buffer.data() + offset, sizeof(len));
-    offset += sizeof(len);
-
-    if (offset + len > buffer.size()) {
-        break;
+    case Schema::FieldType::FLOAT: {
+      float v = *reinterpret_cast<const float *>(data + offset);
+      row.values.push_back(v);
+      offset += sizeof(float);
+      break;
     }
-
-    row.data.insert(row.data.end(), buffer.data() + offset, buffer.data() + offset + len);
-    offset += len;
+    case Schema::FieldType::STRING: {
+      uint8_t len = *(data + offset);
+      offset += 1;
+      std::string s(reinterpret_cast<const char *>(data + offset), len);
+      row.values.push_back(s);
+      offset += f.maxStringLength; // skip fixed-width block
+      break;
+    }
+    }
   }
   return row;
-}
-
-void Row::serializeInto(std::vector<std::uint8_t> &buffer) const {
-  buffer.insert(buffer.end(), data.begin(), data.end());
 }

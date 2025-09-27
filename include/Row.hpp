@@ -1,14 +1,28 @@
 #pragma once
+#include "../include/Schema.hpp"
 #include <string>
+#include <variant>
 #include <vector>
-#include <cstdint>
 
-struct Row {
-    std::vector<std::uint8_t> data;
+class Row {
+public:
+  using FieldValue = std::variant<int, float, std::string>;
 
-    Row() = default; // Saying "I want the default constructor". Just initialises to garbage values tho.
-    explicit Row(const std::vector<std::string>& values);
+  Row() = default;
 
-    static Row deserialize(const std::vector<std::uint8_t>& buffer, size_t& offset);
-    void serializeInto(std::vector<std::uint8_t>& buffer) const; // const -> I'm not gonna modify data.
+  // Initialise with values
+  Row(const std::vector<FieldValue> &values) : values(values) {}
+
+  // Accessors
+  const FieldValue &getField(size_t index) const;
+  void setField(size_t index, FieldValue val);
+
+  // Serialize row into bytes (fixed-width)
+  std::vector<uint8_t> serialize(const Schema &schema) const;
+
+  // Deserialize bytes into a Row
+  static Row deserialize(const Schema &schema, const uint8_t *data);
+
+private:
+  std::vector<FieldValue> values;
 };
