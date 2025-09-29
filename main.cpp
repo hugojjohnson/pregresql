@@ -10,12 +10,12 @@ int main() {
     schema.addField("name", Schema::FieldType::STRING, 20);
 
     Table table("people", schema);
-    table.insertRow(std::vector<Row::FieldValue>{1, "hi"});
+    table.insertRow(std::vector<Row::FieldValue>{1, "alan"});
+    table.insertRow(std::vector<Row::FieldValue>{2, "JOHN"});
+    table.insertRow(std::vector<Row::FieldValue>{3, "Steve"});
 
     auto res = table.getRows();
     for (const auto i : res) {
         std::cout << i.print(schema);
     }
-
-    // Table(const std::string &name, const Schema &schema);
 }
