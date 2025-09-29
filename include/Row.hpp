@@ -3,6 +3,7 @@
 #include <string>
 #include <variant>
 #include <vector>
+#include<iostream>
 
 class Row {
 public:
@@ -22,6 +23,9 @@ public:
 
   // Deserialize bytes into a Row
   static Row deserialize(const Schema &schema, const uint8_t *data);
+
+  
+  std::string print(const Schema& schema) const;
 
 private:
   std::vector<FieldValue> values;

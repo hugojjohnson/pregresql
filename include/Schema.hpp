@@ -14,7 +14,7 @@ public:
 
   Schema() = default;
 
-  void addField(const std::string &name, FieldType type, size_t maxLength);
+  void addField(const std::string &name, FieldType type, size_t maxLength = 0);
 
   size_t getNumFields() const;
 

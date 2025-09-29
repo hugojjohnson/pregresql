@@ -1,5 +1,7 @@
 #include "../include/Row.hpp"
 #include "../include/Schema.hpp"
+#include <iostream>
+#include <sstream>
 #include <string>
 #include <variant>
 #include <vector>
@@ -73,4 +75,35 @@ Row Row::deserialize(const Schema &schema, const uint8_t *data) {
     }
   }
   return row;
+}
+
+std::string Row::print(const Schema &schema) const {
+  std::stringstream ss;
+  int i = 0;
+  // int max = schema.getNumFields();
+  ss << "[";
+  for (const auto val : values) {
+    const auto &fieldType = schema.getField(i).type;
+    bool typeMatches = false;
+    std::visit(
+        [&](auto &&val) {                        // You visit variants.
+          using T = std::decay_t<decltype(val)>; // Strip away references, const, etc.. to just get the type.
+          ss << (T)val;
+          // switch (fieldType) {
+          // case Schema::FieldType::INT:
+          //   // typeMatches = std::is_same_v<T, int>;
+          //   ss << (T)val;
+          //   break;
+          // case Schema::FieldType::FLOAT:
+          //   typeMatches = std::is_same_v<T, float>;
+          //   break;
+          // case Schema::FieldType::STRING:
+          //   typeMatches = std::is_same_v<T, std::string>;
+          //   break;
+          // }
+        },
+        val);
+  }
+  ss << "]\n";
+  return ss.str();
 }

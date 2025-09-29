@@ -1,29 +1,21 @@
-#include "TableFile.hpp"
 #include <iostream>
+#include <vector>
+#include "include/Schema.hpp"
+#include "include/Table.hpp"
+#include "include/Row.hpp"
 
 int main() {
-    TableFile users("users.tbl");
+    Schema schema;
+    schema.addField("id", Schema::FieldType::INT);
+    schema.addField("name", Schema::FieldType::STRING, 20);
 
-    // Allocate first page
-    size_t pageId = users.allocatePage();
-    Page page;
+    Table table("people", schema);
+    table.insertRow(std::vector<Row::FieldValue>{1, "hi"});
 
-    // Insert rows
-    Row r1({"1", "Alice"});
-    Row r2({"2", "Bob"});
-
-    page.insertRow(r1);
-    page.insertRow(r2);
-
-    // Save page to file
-    users.writePage(pageId, page);
-
-    // Read it back
-    Page loaded = users.readPage(pageId);
-    auto rows = loaded.getRows();
-
-    std::cout << "Read back " << rows.size() << " rows\n";
-    for (auto& r : rows) {
-        std::cout << "[Row length=" << r.data.size() << "]\n";
+    auto res = table.getRows();
+    for (const auto i : res) {
+        std::cout << i.print(schema);
     }
+
+    // Table(const std::string &name, const Schema &schema);
 }

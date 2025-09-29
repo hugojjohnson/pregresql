@@ -10,6 +10,8 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 set(SOURCES
     src/Row.cpp
     src/Schema.cpp
+    src/StorageManager.cpp
+    src/Table.cpp
     main.cpp
 )
 
