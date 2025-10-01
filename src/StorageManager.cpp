@@ -39,8 +39,8 @@ void StorageManager::load(std::vector<uint8_t> &header, std::vector<uint8_t> &ro
   if (!file) { // Falsey if failed to read 4 bytes
     throw std::runtime_error("Failed to read header size");
   }
-  std::cout << "Header size from StorageManager: " << headerSize;
-
+  headerSize -= 4; // The 4 bytes already read in
+  
   // Read header
   header.resize(headerSize);
   if (!file.read(reinterpret_cast<char *>(header.data()), headerSize)) {

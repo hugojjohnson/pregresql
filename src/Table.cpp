@@ -3,15 +3,24 @@
 #include <iostream>
 #include <stdexcept>
 #include <vector>
+#include <span>
 
 Table::Table(const std::string &name_, const Schema &schema_) : name(name_), schema(schema_), storage(name_, schema_) {}
 
 void Table::load() {
   std::vector<uint8_t> header;
-  std::vector<uint8_t> rows;
+  std::vector<uint8_t> read_rows;
 
-  storage.load(header, rows);
+  storage.load(header, read_rows);
   schema.load(header);
+
+  if (read_rows.size() % schema.getRowLength() != 0) {
+    throw std::runtime_error("Remaining read_rows should be a multiple of the row length");
+  }
+  for (int i = 0; i < (int)(read_rows.size()/schema.getRowLength()); i++) {
+    Row r = Row::deserialize(schema, read_rows.data() + schema.getRowLength() * i);
+    rows.push_back(r);
+  }
   //     schema.addField("id", Schema::FieldType::INT);
 };
 
@@ -69,7 +78,9 @@ std::ostream& operator<<(std::ostream& os, Table& t) {
   os << "Table: " << t.name << "\n";
   os << "Schema:\n";
   os << t.schema;
-  os << "\n";
-  os << "Rows:\n[Coming soon!]";
+  os << "Rows:\n";
+  for (auto row : t.rows) {
+    os << row.print(t.schema);
+  }
   return os;
 }
