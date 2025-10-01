@@ -6,6 +6,7 @@
 // [HEADER]
 //   [header size: 4 bytes] <- including itself!
 //   [number of fields: 4 bytes]
+//   [primary key index: 1 byte]
 //   [row length: 4 bytes]
 //   for each field:
 //     [field type: 2 bytes]

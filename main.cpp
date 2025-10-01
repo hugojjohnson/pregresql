@@ -17,10 +17,13 @@ int main() {
 //     Schema schema;
 //     schema.addField("id", Schema::FieldType::INT);
 //     schema.addField("name", Schema::FieldType::STRING, 20);
+//     schema.pkIndex = -1;
 
 //     Table table("people", schema);
+    
 //     table.setPk(0);
-//     table.updateSchema();
+
+//     table.writeSchema();
 
 //     table.insertRow(std::vector<Row::FieldValue>{1, "alan"});
 //     // table.insertRow(std::vector<Row::FieldValue>{2, "JOHN"});

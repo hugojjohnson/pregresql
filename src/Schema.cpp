@@ -12,6 +12,10 @@ void Schema::load(std::vector<uint8_t> data) {
 
   utils::ByteReader reader(data.data(), data.size());
   auto num_of_fields = reader.read_le<uint32_t>();
+
+  pkIndex = reader.read_le<uint8_t>();
+  pkIndex = 0;
+
   [[maybe_unused]] auto _ = reader.read_le<uint32_t>(); // Row length: Coming soon.
 
   // Useful helper function for displaying bytes from a vector<uint8_t>.
@@ -35,6 +39,9 @@ std::vector<uint8_t> Schema::serialize() const {
 
   uint32_t num_fields = getNumFields();
   utils::push_back_bytes(buffer, num_fields);
+
+  uint8_t primary_key_index = pkIndex;
+  utils::push_back_bytes(buffer, primary_key_index);
 
   uint32_t row_length = getRowLength();
   utils::push_back_bytes(buffer, row_length);
@@ -69,7 +76,6 @@ std::vector<uint8_t> Schema::serialize() const {
   // buffer.insert(buffer.end(), p, p + sizeof(int));
 
   uint32_t header_size = buffer.size() + 4;
-  std::cout << header_size;
   utils::push_front_bytes(buffer, header_size);
   return std::vector<uint8_t>(buffer.begin(), buffer.end());
 }
@@ -112,10 +118,9 @@ size_t Schema::getRowLength() const {
 // Print schema
 std::ostream &operator<<(std::ostream &os, Schema &s) {
   int len = s.getNumFields();
-  os << "Iterating over " << len << "fields.\n";
   for (auto i = 0; i < len; i++) {
     const auto entry = s.fields[i];
-    os << entry.name << ": ";
+    os << "  " << entry.name << ": ";
     switch (entry.type) {
     case Schema::FieldType::INT:
       os << "INT";
@@ -124,12 +129,12 @@ std::ostream &operator<<(std::ostream &os, Schema &s) {
       os << "FLOAT";
       break;
     case Schema::FieldType::STRING:
-      os << "STRING"; 
+      os << "STRING";
       break;
     }
-    // if (i == s.pk_index) {
-    //   os << "(pk)"
-    // }
+    if (i == s.pkIndex) {
+      os << " (PK)";
+    }
     os << "\n";
   }
   return os;

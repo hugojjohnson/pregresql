@@ -5,7 +5,6 @@
 class Schema {
 public:
   enum class FieldType { INT = 0, FLOAT = 1, STRING = 2 };
-
   static FieldType parseFieldType(uint16_t val) {
         switch (val) {
             case 0: return FieldType::INT;
@@ -21,6 +20,8 @@ public:
     FieldType type;               // INT, FLOAT, STRING
     size_t maxStringLength = 100; // Only used for STRING
   };
+
+  int pkIndex = -1; // -1 means no pk
 
   Schema() = default;
 

@@ -5,7 +5,7 @@
 #include <vector>
 #include <span>
 
-Table::Table(const std::string &name_, const Schema &schema_) : name(name_), schema(schema_), storage(name_, schema_) {}
+Table::Table(const std::string &name_, Schema &schema_) : name(name_), schema(schema_), storage(name_, schema_) {}
 
 void Table::load() {
   std::vector<uint8_t> header;
@@ -25,7 +25,7 @@ void Table::load() {
 };
 
 // Write schema to disk
-void Table::updateSchema() const {
+void Table::writeSchema() const {
     storage.writeSchema();
 }
 
@@ -40,7 +40,7 @@ void Table::insertRow(const std::vector<Row::FieldValue> &values) {
   }
 
   // pk check
-  int pk_value = std::get<int>(values[pkIndex]); // Throws a runtime error on bad type
+  int pk_value = std::get<int>(values[schema.pkIndex]); // Throws a runtime error on bad type
   if (pk_map.contains(pk_value)) {
     throw std::runtime_error("PK already in table.");
   }
@@ -68,10 +68,10 @@ void Table::setPk(int index) {
   if (schema.getField(index).type != Schema::FieldType::INT) {
     throw std::runtime_error("Error: (Currently) index must be type int.");
   }
-  if (pkIndex != -1) {
+  if (schema.pkIndex != -1) {
     throw std::runtime_error("ERROR: Can only set pk once as of now.");
   }
-  pkIndex = index;
+  schema.pkIndex = index;
 }
 
 std::ostream& operator<<(std::ostream& os, Table& t) {

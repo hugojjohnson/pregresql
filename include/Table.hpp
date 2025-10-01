@@ -9,13 +9,13 @@
 
 class Table {
 public:
-  Table(const std::string &name, const Schema &schema);
+  Table(const std::string &name, Schema &schema);
 
   // Load schema and rows from disk
   void load();
 
   // Write schema to disk
-  void updateSchema() const;
+  void writeSchema() const;
 
   // Insert a row given a vector of values
   void insertRow(const std::vector<Row::FieldValue> &values);
@@ -33,9 +33,8 @@ public:
 
 private:
   std::string name;
-  Schema schema;
+  Schema& schema;
   std::vector<Row> rows;
-  int pkIndex = -1; // -1 means no pk
   std::map<int, int> pk_map;
 
   StorageManager storage; // handles file I/O
