@@ -24,6 +24,7 @@ public:
   // Deserialize bytes into a Row
   static Row deserialize(const Schema &schema, const uint8_t *data);
 
+  static bool validType(const std::vector<Row::FieldValue>& values, Schema schema);
   
   std::string print(const Schema& schema) const;
 

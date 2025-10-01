@@ -21,7 +21,7 @@ std::vector<uint8_t> Row::serialize(const Schema &schema) const {
     case Schema::FieldType::INT: {
       int v = std::get<int>(val);
       uint8_t *p = reinterpret_cast<uint8_t *>(&v);
-      buffer.insert(buffer.end(), p, p + sizeof(int));
+      buffer.insert(buffer.end(), p, p + sizeof(int)); // TODO: Use new utils functions.
       break;
     }
     case Schema::FieldType::FLOAT: {
@@ -75,6 +75,31 @@ Row Row::deserialize(const Schema &schema, const uint8_t *data) {
     }
   }
   return row;
+}
+
+bool Row::validType(const std::vector<Row::FieldValue>& values, Schema schema) {
+  for (size_t i = 0; i < values.size(); ++i) {
+        const auto& fieldType = schema.getField(i).type;
+        bool typeMatches = false;
+        std::visit([&](auto&& val){ // You visit variants.
+            using T = std::decay_t<decltype(val)>; // Strip away references, const, etc.. to just get the type.
+            switch (fieldType) {
+                case Schema::FieldType::INT:
+                    typeMatches = std::is_same_v<T,int>;
+                    break;
+                case Schema::FieldType::FLOAT:
+                    typeMatches = std::is_same_v<T,float>;
+                    break;
+                case Schema::FieldType::STRING:
+                    typeMatches = std::is_same_v<T,std::string>;
+                    break;
+            }
+        }, values[i]);
+        if (!typeMatches) {
+            return false;
+        }
+    }
+    return true;
 }
 
 std::string Row::print(const Schema &schema) const {

@@ -1,14 +1,21 @@
 #pragma once
-#include <functional>
-#include <string>
-#include <vector>
 #include "Row.hpp"
 #include "Schema.hpp"
 #include "StorageManager.hpp"
+#include <functional>
+#include <map>
+#include <string>
+#include <vector>
 
 class Table {
 public:
   Table(const std::string &name, const Schema &schema);
+
+  // Load schema and rows from disk
+  void load();
+
+  // Write schema to disk
+  void updateSchema() const;
 
   // Insert a row given a vector of values
   void insertRow(const std::vector<Row::FieldValue> &values);
@@ -20,9 +27,16 @@ public:
   // Optional: find rows matching a simple predicate
   std::vector<Row> selectRows(std::function<bool(const Row &)> predicate) const;
 
+  void setPk(int index);
+
+  friend std::ostream& operator<<(std::ostream& os, Table& t);
+
 private:
   std::string name;
   Schema schema;
-  std::vector<Row> rows;                   // in-memory storage of rows for now
-  StorageManager storage; // handles file I/O later
+  std::vector<Row> rows;
+  int pkIndex = -1; // -1 means no pk
+  std::map<int, int> pk_map;
+
+  StorageManager storage; // handles file I/O
 };

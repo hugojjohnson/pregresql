@@ -10,6 +10,12 @@ class StorageManager {
 public:
     StorageManager(const std::string& tableName, const Schema& schema);
 
+    // load from disk
+    void load(std::vector<uint8_t>& header, std::vector<uint8_t>& rows) const;
+
+    // Append a row to the file
+    void writeSchema() const;
+
     // Append a row to the file
     void appendRow(const Row& row);
 

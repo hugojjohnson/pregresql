@@ -1,53 +1,75 @@
 #include "../include/Table.hpp"
 #include "../include/StorageManager.hpp"
-#include <stdexcept>
 #include <iostream>
+#include <stdexcept>
+#include <vector>
 
-Table::Table(const std::string& name_, const Schema& schema_)
-    : name(name_), schema(schema_), storage(name_, schema_) {}
+Table::Table(const std::string &name_, const Schema &schema_) : name(name_), schema(schema_), storage(name_, schema_) {}
 
-void Table::insertRow(const std::vector<Row::FieldValue>& values) {
-    if (values.size() != schema.getNumFields()) {
-        std::cout << "Error: Row size (" << values.size() << ") does not match schema size (" << schema.getNumFields() << ").\n";
-        throw std::runtime_error("Value count does not match schema.");
-    }
+void Table::load() {
+  std::vector<uint8_t> header;
+  std::vector<uint8_t> rows;
 
-    // Optional: type check against schema
-    for (size_t i = 0; i < values.size(); ++i) {
-        const auto& fieldType = schema.getField(i).type;
-        bool typeMatches = false;
-        std::visit([&](auto&& val){ // You visit variants.
-            using T = std::decay_t<decltype(val)>; // Strip away references, const, etc.. to just get the type.
-            switch (fieldType) {
-                case Schema::FieldType::INT:
-                    typeMatches = std::is_same_v<T,int>;
-                    break;
-                case Schema::FieldType::FLOAT:
-                    typeMatches = std::is_same_v<T,float>;
-                    break;
-                case Schema::FieldType::STRING:
-                    typeMatches = std::is_same_v<T,std::string>;
-                    break;
-            }
-        }, values[i]);
-        if (!typeMatches) {
-            throw std::runtime_error("Type of value does not match schema.");
-        }
-    }
+  storage.load(header, rows);
+  schema.load(header);
+  //     schema.addField("id", Schema::FieldType::INT);
+};
 
-    Row row(values);
-    rows.push_back(row);
-
-    // Later: write to file via storage
-    storage.appendRow(row);
+// Write schema to disk
+void Table::updateSchema() const {
+    storage.writeSchema();
 }
 
-std::vector<Row> Table::selectRows(std::function<bool(const Row&)> predicate) const {
-    std::vector<Row> result;
-    for (const auto& row : rows) {
-        if (predicate(row)) {
-            result.push_back(row);
-        }
+void Table::insertRow(const std::vector<Row::FieldValue> &values) {
+  if (values.size() != schema.getNumFields()) {
+    std::cout << "Error: Row size (" << values.size() << ") does not match schema size (" << schema.getNumFields()
+              << ").\n";
+    throw std::runtime_error("Value count does not match schema.");
+  }
+  if (!Row::validType(values, schema)) {
+    throw std::runtime_error("Type of value does not match schema.");
+  }
+
+  // pk check
+  int pk_value = std::get<int>(values[pkIndex]); // Throws a runtime error on bad type
+  if (pk_map.contains(pk_value)) {
+    throw std::runtime_error("PK already in table.");
+  }
+
+  pk_map[pk_value] = rows.size();
+  Row row(values);
+  rows.push_back(row);
+  storage.appendRow(row);
+}
+
+std::vector<Row> Table::selectRows(std::function<bool(const Row &)> predicate) const {
+  std::vector<Row> result;
+  for (const auto &row : rows) {
+    if (predicate(row)) {
+      result.push_back(row);
     }
-    return result;
+  }
+  return result;
+}
+
+void Table::setPk(int index) {
+  if (schema.getNumFields() <= index || index < 0) {
+    throw std::runtime_error("ERROR: Index is out of range.");
+  }
+  if (schema.getField(index).type != Schema::FieldType::INT) {
+    throw std::runtime_error("Error: (Currently) index must be type int.");
+  }
+  if (pkIndex != -1) {
+    throw std::runtime_error("ERROR: Can only set pk once as of now.");
+  }
+  pkIndex = index;
+}
+
+std::ostream& operator<<(std::ostream& os, Table& t) {
+  os << "Table: " << t.name << "\n";
+  os << "Schema:\n";
+  os << t.schema;
+  os << "\n";
+  os << "Rows:\n[Coming soon!]";
+  return os;
 }
