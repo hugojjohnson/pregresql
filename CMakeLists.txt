@@ -14,19 +14,23 @@ set(SOURCES
     src/Table.cpp
 )
 
-set(TEST_SOURCES
-    tests/test_main.cpp
-)
+# set(TEST_SOURCES
+#     tests/*
+# )
+# file(GLOB TEST_SOURCES "tests/*.cpp") # or "*.cxx" or whatever
+file(GLOB TEST_CPP "tests/*.cpp")
+file(GLOB TEST_HPP "tests/*.hpp")
 
-add_executable(tinydb ${SOURCES} main.cpp)
+
+add_executable(main ${SOURCES} main.cpp)
 
 
 enable_testing()  # tell CMake you’re going to have tests
 
 # add_executable(tinydb_test ${TINYDB_SOURCES} tests/main.cpp)
-add_executable(main_tests ${SOURCES} ${TEST_SOURCES})
+add_executable(t ${SOURCES} ${TEST_CPP} ${TEST_HPP})
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/tests/golden DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/tests)
 
 
 # Register the test with CTest
-add_test(NAME tinydb_test COMMAND main_tests)
+add_test(NAME tinydb_test COMMAND t)
