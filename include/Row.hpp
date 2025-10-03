@@ -7,7 +7,7 @@
 
 class Row {
 public:
-  using FieldValue = std::variant<int, float, std::string>;
+  using FieldValue = std::optional<std::variant<int, float, std::string>>;
 
   Row() = default;
 
@@ -30,4 +30,5 @@ public:
 
 private:
   std::vector<FieldValue> values;
+  std::vector<uint8_t> generateNullBitmap(const Schema &schema) const;
 };

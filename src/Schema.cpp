@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-void Schema::addField(const std::string &name, FieldType type, size_t maxLength) { fields.push_back({name, type, maxLength}); }
+void Schema::addField(const std::string &name, FieldType type, size_t maxLength, bool can_be_null) { fields.push_back({name, type, maxLength, can_be_null}); }
 
 void Schema::load(std::vector<uint8_t> data) {
 
@@ -27,9 +27,10 @@ void Schema::load(std::vector<uint8_t> data) {
   for (int i = 0; i < num_of_fields; i++) {
     uint16_t field_type = reader.read_le<uint16_t>();
     auto field_max_size = reader.read_le<uint32_t>();
+    auto can_be_null = reader.read_le<uint8_t>();
     auto field_name_length = reader.read_le<uint32_t>();
     auto name = reader.read_string(field_name_length);
-    addField(name, parseFieldType(field_type), field_max_size);
+    addField(name, parseFieldType(field_type), field_max_size, can_be_null);
   }
   // std::cout << "Header size: " << header_size;
 }
@@ -51,6 +52,7 @@ std::vector<uint8_t> Schema::serialize() const {
 
     uint16_t field_type = (uint16_t)f.type;
     uint32_t max_size;
+    uint8_t can_be_null = f.can_be_null;
     uint32_t field_name_length = f.name.size();
     std::string field_name;
     switch (f.type) {
@@ -67,6 +69,7 @@ std::vector<uint8_t> Schema::serialize() const {
 
     utils::push_back_bytes(buffer, field_type);
     utils::push_back_bytes(buffer, max_size);
+    utils::push_back_bytes(buffer, can_be_null);
     utils::push_back_bytes(buffer, field_name_length);
     buffer.insert(buffer.end(), f.name.begin(), f.name.end());
   }
@@ -97,8 +100,16 @@ const Schema::Field &Schema::getField(const std::string &name) const {
   throw std::out_of_range("field name");
 }
 
+void Schema::canBeNull(int index) {
+  if (index > getNumFields()) {
+    throw std::runtime_error("Index greater than the number of fields.");
+  }
+  fields[index].can_be_null = true;
+}
+
 size_t Schema::getRowLength() const {
   size_t length = 0;
+  length += getBitmapLength();
   for (auto &f : fields) {
     switch (f.type) {
     case FieldType::INT:
@@ -108,11 +119,16 @@ size_t Schema::getRowLength() const {
       length += sizeof(float);
       break;
     case FieldType::STRING:
-      length += f.maxStringLength + sizeof(GLOBAL_MAX_STRING_LEN);
+      length += f.maxStringLength + sizeof(GLOBAL_MAX_STRING_LEN); // Stores string length too!
       break;
     }
   }
   return length;
+}
+
+size_t Schema::getBitmapLength() const {
+  // Number of bytes needed = ceil(num_fields / 8)
+  return (getNumFields() + 7) / 8;
 }
 
 // Print schema
@@ -134,6 +150,9 @@ std::ostream &operator<<(std::ostream &os, Schema &s) {
     }
     if (i == s.pkIndex) {
       os << " (PK)";
+    }
+    if (entry.can_be_null) {
+      os << " (NULL)";
     }
     os << "\n";
   }

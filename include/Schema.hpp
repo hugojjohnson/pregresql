@@ -19,6 +19,7 @@ public:
     std::string name;             // Column name
     FieldType type;               // INT, FLOAT, STRING
     size_t maxStringLength = 100; // Only used for STRING
+    bool can_be_null = false;
   };
 
   int pkIndex = -1; // -1 means no pk
@@ -28,15 +29,17 @@ public:
   void load(std::vector<uint8_t> data);
   std::vector<uint8_t> serialize() const;
 
-  void addField(const std::string &name, FieldType type, size_t maxLength = 0);
+  void addField(const std::string &name, FieldType type, size_t maxLength = 0, bool can_be_null = false);
 
   size_t getNumFields() const;
 
   const Field &getField(size_t index) const;
-
   const Field &getField(const std::string &name) const;
 
+  void canBeNull(int index);
+
   size_t getRowLength() const;
+  size_t getBitmapLength() const;
 
   friend std::ostream& operator<<(std::ostream&os, Schema& s);
 

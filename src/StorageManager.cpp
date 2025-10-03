@@ -11,12 +11,14 @@
 //   for each field:
 //     [field type: 2 bytes]
 //     [field max size: 4 bytes]
+//     [can be null: one byte]
 //     [field name length: 4 bytes]
 //     [field name: N bytes]
 
 // [ROWS]
 //   repeat:
 //     [null bitmap: ceil(numFields / 8) bytes]
+//     [IF A STRING: 1 byte for actual string length]
 //     [field1 value] (if not null, else skipped)
 //     [field2 value]
 

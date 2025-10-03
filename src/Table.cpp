@@ -12,9 +12,11 @@ void Table::load() {
   std::vector<uint8_t> read_rows;
 
   storage.load(header, read_rows);
+
   schema.load(header);
 
   if (read_rows.size() % schema.getRowLength() != 0) {
+    std::cout << read_rows.size() << " is not a multiple of " << schema.getRowLength();
     throw std::runtime_error("Remaining read_rows should be a multiple of the row length");
   }
   for (int i = 0; i < (int)(read_rows.size()/schema.getRowLength()); i++) {
@@ -40,7 +42,10 @@ void Table::insertRow(const std::vector<Row::FieldValue> &values) {
   }
 
   // pk check
-  int pk_value = std::get<int>(values[schema.pkIndex]); // Throws a runtime error on bad type
+  if (!values[schema.pkIndex]) {
+    throw std::runtime_error("PK attribute cannot be null.");
+  }
+  int pk_value = std::get<int>(values[schema.pkIndex].value()); // Throws a runtime error on bad type
   if (pk_map.contains(pk_value)) {
     throw std::runtime_error("PK already in table.");
   }
