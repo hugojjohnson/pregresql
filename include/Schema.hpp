@@ -5,15 +5,8 @@
 class Schema {
 public:
   enum class FieldType { INT = 0, FLOAT = 1, STRING = 2 };
-  static FieldType parseFieldType(uint16_t val) {
-        switch (val) {
-            case 0: return FieldType::INT;
-            case 1: return FieldType::FLOAT;
-            case 2: return FieldType::STRING;
-            default:
-                throw std::runtime_error("Invalid FieldType value: " + std::to_string(val));
-        }
-    }
+  static FieldType parseFieldType(uint16_t val);
+  static FieldType parseFieldType(std::string val);
 
   struct Field {
     std::string name;             // Column name
@@ -41,7 +34,7 @@ public:
   size_t getRowLength() const;
   size_t getBitmapLength() const;
 
-  friend std::ostream& operator<<(std::ostream&os, Schema& s);
+  friend std::ostream &operator<<(std::ostream &os, Schema &s);
 
 private:
   std::vector<Field> fields;

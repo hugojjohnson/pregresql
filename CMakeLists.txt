@@ -12,6 +12,7 @@ set(SOURCES
     src/Schema.cpp
     src/StorageManager.cpp
     src/Table.cpp
+    src/Parser.cpp
 )
 
 # set(TEST_SOURCES

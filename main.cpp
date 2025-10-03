@@ -1,38 +1,27 @@
+#include "include/Parser.hpp"
 #include "include/Row.hpp"
 #include "include/Schema.hpp"
 #include "include/Table.hpp"
+#include "include/utils.hpp"
 #include <iostream>
 #include <vector>
 
-#include "include/utils.hpp"
-
 int main() {
-  Schema schema;
-  Table table("people", schema);
-  table.load();
+  // std::string query = "CREATE TABLE MyTable ( INT id, FLOAT val, STRING str )";
+  std::string query;
+  // std::cin >> query;
+  std::getline(std::cin, query);
 
-  std::cout << table;
+  try {
+    Parser parser(query);
+    Schema schema;
+    Table table = parser.parseCreateTable(schema);
+
+    std::cout << table;
+  } catch (const std::exception &ex) {
+    std::cerr << "Parse error: " << ex.what() << "\n";
+  }
 }
-// int main() {
-//     Schema schema;
-//     schema.addField("id", Schema::FieldType::INT);
-//     schema.addField("name", Schema::FieldType::STRING, 20);
-//     schema.canBeNull(1);
 
-//     Table table("people", schema);
-    
-//     table.setPk(0);
 
-//     table.writeSchema();
-
-//     table.insertRow(std::vector<Row::FieldValue>{1, "alan"});
-//     table.insertRow(std::vector<Row::FieldValue>{2, "JOHN"});
-//     table.insertRow(std::vector<Row::FieldValue>{3, std::nullopt});
-//     // table.insertRow(std::vector<Row::FieldValue>{3, "Steve"});
-//     // table.insertRow(std::vector<Row::FieldValue>{3, "Steve 2"});
-
-//     auto res = table.getRows();
-//     for (const auto i : res) {
-//         std::cout << i.print(schema);
-//     }
-// }
+// CREATE TABLE Bank_balances (INT id, STRING phone_number, FLOAT bank_balance)

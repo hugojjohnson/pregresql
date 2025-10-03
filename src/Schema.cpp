@@ -6,6 +6,29 @@
 #include <string>
 #include <vector>
 
+Schema::FieldType Schema::parseFieldType(uint16_t val) {
+  switch (val) {
+  case 0:
+    return FieldType::INT;
+  case 1:
+    return FieldType::FLOAT;
+  case 2:
+    return FieldType::STRING;
+  default:
+    throw std::runtime_error("Invalid FieldType value: " + std::to_string(val));
+  }
+}
+Schema::FieldType Schema::parseFieldType(std::string val) {
+  if (val == "INT") {
+    return FieldType::INT;
+  } else if (val == "FLOAT") {
+    return FieldType::FLOAT;
+  } else if (val == "STRING") {
+    return FieldType::STRING;
+  }
+  throw std::runtime_error("Invalid FieldType value: " + val);
+}
+
 void Schema::addField(const std::string &name, FieldType type, size_t maxLength, bool can_be_null) { fields.push_back({name, type, maxLength, can_be_null}); }
 
 void Schema::load(std::vector<uint8_t> data) {
