@@ -22,8 +22,7 @@
 //     [field1 value] (if not null, else skipped)
 //     [field2 value]
 
-StorageManager::StorageManager(const std::string &tableName, const Schema &schema_) : filename(tableName + ".tbl"), schema(schema_) {
-  rowLength = schema.getRowLength();
+StorageManager::StorageManager(const std::string &tableName, const Schema &schema_) : filename(tableName + ".tbl"), schema(&schema_) {
 
   // Ensure file exists
   std::ofstream file(filename, std::ios::binary | std::ios::app);
@@ -59,7 +58,7 @@ void StorageManager::writeSchema() const {
   std::ofstream file(filename, std::ios::binary); // Note, you're NOT appending: You're writing the file header again.
   if (!file)
     throw std::runtime_error("Cannot open table file for writing.");
-  auto buffer = schema.serialize();
+  auto buffer = schema->serialize();
   file.write(reinterpret_cast<const char *>(buffer.data()), buffer.size());
 }
 
@@ -68,11 +67,12 @@ void StorageManager::appendRow(const Row &row) {
   if (!file)
     throw std::runtime_error("Cannot open table file for writing.");
 
-  auto buffer = row.serialize(schema);
+  auto buffer = row.serialize(*schema);
   file.write(reinterpret_cast<const char *>(buffer.data()), buffer.size());
 }
 
 Row StorageManager::readRow(size_t index) {
+  size_t rowLength = schema->getRowLength();
   std::ifstream file(filename, std::ios::binary);
   if (!file)
     throw std::runtime_error("Cannot open table file for reading.");
@@ -84,11 +84,11 @@ Row StorageManager::readRow(size_t index) {
   if (file.gcount() != rowLength)
     throw std::runtime_error("Failed to read complete row.");
 
-  return Row::deserialize(schema, buffer.data());
+  return Row::deserialize(*schema, buffer.data());
 }
 
 size_t StorageManager::numRows() const {
   if (!std::filesystem::exists(filename))
     return 0;
-  return std::filesystem::file_size(filename) / rowLength;
+  return std::filesystem::file_size(filename) / schema->getRowLength();
 }

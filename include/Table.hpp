@@ -9,7 +9,9 @@
 
 class Table {
 public:
-  Table(const std::string &name, Schema &schema);
+  Schema schema;
+  
+  Table(const std::string &name);
 
   // Load schema and rows from disk
   void load();
@@ -33,7 +35,6 @@ public:
 
 private:
   std::string name;
-  Schema& schema;
   std::vector<Row> rows;
   std::map<int, int> pk_map;
 

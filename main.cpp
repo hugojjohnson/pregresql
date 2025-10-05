@@ -1,27 +1,41 @@
+#include "include/Executor.hpp"
 #include "include/Parser.hpp"
 #include "include/Row.hpp"
 #include "include/Schema.hpp"
+#include "include/Statements.hpp"
 #include "include/Table.hpp"
 #include "include/utils.hpp"
 #include <iostream>
 #include <vector>
 
 int main() {
-  // std::string query = "CREATE TABLE MyTable ( INT id, FLOAT val, STRING str )";
   std::string query;
-  // std::cin >> query;
-  std::getline(std::cin, query);
+  Parser parser;
+  Executor executor;
+  Statements::StatementVariant stmt;
 
-  try {
-    Parser parser(query);
-    Schema schema;
-    Table table = parser.parseCreateTable(schema);
+  while (true) {
+    std::getline(std::cin, query);
+    std::cout << "Received: " << query << "\n";
 
-    std::cout << table;
-  } catch (const std::exception &ex) {
-    std::cerr << "Parse error: " << ex.what() << "\n";
+    try {
+      stmt = parser.parse(query);
+    } catch (const std::exception &ex) {
+        std::cerr << "Parse error: " << ex.what() << "\n";
+        continue;
+    }
+
+    try {
+      std::visit([&executor](auto&& s){ executor.execute(s); }, stmt);
+    } catch (const std::exception& ex) {
+        std::cerr << "Execution error: " << ex.what() << "\n";
+    }
   }
+
 }
 
+// === Queries implemented so far ===
+// CREATE TABLE MyTable ( INT id, FLOAT val, STRING str )
 
-// CREATE TABLE Bank_balances (INT id, STRING phone_number, FLOAT bank_balance)
+// === Up next ===
+// INSERT INTO MyTable VALUES (3, 2.3, "Hugo");

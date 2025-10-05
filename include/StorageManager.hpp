@@ -8,7 +8,8 @@
 
 class StorageManager {
 public:
-    StorageManager(const std::string& tableName, const Schema& schema);
+    StorageManager(const std::string& tableName) : filename(""), schema(nullptr) {} // only temporary until schema is set
+    StorageManager(const std::string& tableName, const Schema& schema); // Actual initialisation
 
     // load from disk
     void load(std::vector<uint8_t>& header, std::vector<uint8_t>& rows) const;
@@ -27,9 +28,8 @@ public:
 
 private:
     std::string filename;
-    const Schema& schema;       // Table owns the schema
-    size_t rowLength;           // Cache row size for offsets
+    const Schema* schema;       // Table owns the schema
 
     // Helper: compute row offset
-    size_t rowOffset(size_t index) const { return index * rowLength; }
+    size_t rowOffset(size_t index) const { return index * schema->getRowLength(); }
 };

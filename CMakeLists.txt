@@ -7,18 +7,8 @@ set(CMAKE_CXX_STANDARD 23)
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
 # Collect sources
-set(SOURCES
-    src/Row.cpp
-    src/Schema.cpp
-    src/StorageManager.cpp
-    src/Table.cpp
-    src/Parser.cpp
-)
+file(GLOB SOURCES "src/*.cpp")
 
-# set(TEST_SOURCES
-#     tests/*
-# )
-# file(GLOB TEST_SOURCES "tests/*.cpp") # or "*.cxx" or whatever
 file(GLOB TEST_CPP "tests/*.cpp")
 file(GLOB TEST_HPP "tests/*.hpp")
 

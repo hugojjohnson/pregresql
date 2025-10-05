@@ -1,14 +1,15 @@
 #include "../include/Table.hpp"
 #include "../include/StorageManager.hpp"
 #include <iostream>
+#include <span>
 #include <stdexcept>
 #include <vector>
-#include <span>
 
-Table::Table(const std::string &name_, Schema &schema_) : name(name_), schema(schema_), storage(name_, schema_) {}
+Table::Table(const std::string &name_) : name(name_), schema(), storage("") { storage = StorageManager(name_, schema); }
 
 void Table::load() {
   std::vector<uint8_t> header;
+  
   std::vector<uint8_t> read_rows;
 
   storage.load(header, read_rows);
@@ -19,22 +20,18 @@ void Table::load() {
     std::cout << read_rows.size() << " is not a multiple of " << schema.getRowLength();
     throw std::runtime_error("Remaining read_rows should be a multiple of the row length");
   }
-  for (int i = 0; i < (int)(read_rows.size()/schema.getRowLength()); i++) {
+  for (int i = 0; i < (int)(read_rows.size() / schema.getRowLength()); i++) {
     Row r = Row::deserialize(schema, read_rows.data() + schema.getRowLength() * i);
     rows.push_back(r);
   }
-  //     schema.addField("id", Schema::FieldType::INT);
 };
 
 // Write schema to disk
-void Table::writeSchema() const {
-    storage.writeSchema();
-}
+void Table::writeSchema() const { storage.writeSchema(); }
 
 void Table::insertRow(const std::vector<Row::FieldValue> &values) {
   if (values.size() != schema.getNumFields()) {
-    std::cout << "Error: Row size (" << values.size() << ") does not match schema size (" << schema.getNumFields()
-              << ").\n";
+    std::cout << "Error: Row size (" << values.size() << ") does not match schema size (" << schema.getNumFields() << ").\n";
     throw std::runtime_error("Value count does not match schema.");
   }
   if (!Row::validType(values, schema)) {
@@ -79,7 +76,7 @@ void Table::setPk(int index) {
   schema.pkIndex = index;
 }
 
-std::ostream& operator<<(std::ostream& os, Table& t) {
+std::ostream &operator<<(std::ostream &os, Table &t) {
   os << "Table: " << t.name << "\n";
   os << "Schema:\n";
   os << t.schema;

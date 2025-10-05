@@ -1,5 +1,6 @@
 #include "../include/Parser.hpp"
 #include "../include/Schema.hpp"
+#include "../include/Statements.hpp"
 #include "Table.hpp"
 #include <iostream>
 #include <sstream>
@@ -7,36 +8,41 @@
 #include <string>
 #include <vector>
 
-Table Parser::parseCreateTable(Schema& schema) {
+using namespace Statements;
 
+StatementVariant Parser::parse(std::string& input) {
+  tokenize(input);
+  if (peek() == "CREATE") {
+    return parseCreateTable();
+  }
+  throw std::runtime_error("Statement not found.");
+}
+
+
+CreateTableStmt Parser::parseCreateTable() {
   expect("CREATE");
   expect("TABLE");
-
   std::string name = next();
-
-  Table table(name, schema);
-
+  std::vector<CreateTableStmt::CreateTableField> fields;
   expect("(");
-
   // Parse columns until ')'
   while (peek() != ")") {
-      Schema::FieldType field = Schema::parseFieldType(next());
-      std::string name = next();
-      schema.addField(name, field);
-
+    Schema::FieldType field = Schema::parseFieldType(next());
+    std::string name = next();
+    fields.push_back(CreateTableStmt::CreateTableField{name, field});
     if (peek() == ",") {
       next(); // consume the comma
     } else if (peek() != ")") {
       throw std::runtime_error("Expected ',' or ')'");
     }
   }
-
   expect(")");
-
-  return table;
+  return CreateTableStmt{name, fields};
 }
 
 void Parser::tokenize(const std::string &input) {
+  pos = 0;
+  tokens.clear();
   std::istringstream iss(input);
   std::string token;
   while (iss >> token) {
@@ -60,8 +66,9 @@ void Parser::tokenize(const std::string &input) {
 }
 
 std::string Parser::peek() const {
-  if (pos >= tokens.size())
+  if (pos >= tokens.size()) {
     throw std::runtime_error("Unexpected end of input");
+  }
   return tokens[pos];
 }
 
