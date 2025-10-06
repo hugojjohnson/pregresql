@@ -16,6 +16,7 @@ void Row::setField(size_t index, FieldValue val) { values[index] = val; }
 std::vector<uint8_t> Row::generateNullBitmap(const Schema &schema) const {
   size_t numFields = schema.getNumFields();
   size_t bitmapSize = schema.getBitmapLength();
+  std::cout << "bitmapSize: " << bitmapSize;
   std::vector<uint8_t> bitmap(bitmapSize, 0);
   for (size_t i = 0; i < numFields; ++i) {
     if (!values[i]) { // i.e. it's null
@@ -214,6 +215,17 @@ std::vector<Row::FieldValue> Row::parse(const std::vector<std::string> &values, 
     case Schema::FieldType::STRING:
       output_values.push_back(v);
       break;
+    }
+  }
+
+  std::cout << "Values: \n";
+  for (auto i : output_values) {
+    if (i) {
+      std::visit([](auto&& val){
+        std::cout << val << "\n";
+      }, *i);
+    } else {
+      std::cout << "NULL\n";
     }
   }
   return output_values;

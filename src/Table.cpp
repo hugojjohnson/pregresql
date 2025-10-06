@@ -5,7 +5,8 @@
 #include <stdexcept>
 #include <vector>
 
-Table::Table(const std::string &name_) : name(name_), schema(), storage("") { storage = StorageManager(name_, schema); }
+Table::Table(const std::string &name_) : name(name_), schema(), storage("") { storage = StorageManager(name_); }
+
 
 void Table::load() {
   std::vector<uint8_t> header;
@@ -27,7 +28,7 @@ void Table::load() {
 };
 
 // Write schema to disk
-void Table::writeSchema() const { storage.writeSchema(); }
+void Table::writeSchema() const { storage.writeSchema(schema); }
 
 void Table::insertRow(const std::vector<Row::FieldValue> &values) {
   if (values.size() != schema.getNumFields()) {
@@ -50,7 +51,7 @@ void Table::insertRow(const std::vector<Row::FieldValue> &values) {
   pk_map[pk_value] = rows.size();
   Row row(values);
   rows.push_back(row);
-  storage.appendRow(row);
+  storage.appendRow(row, schema);
 }
 
 std::vector<Row> Table::selectRows(std::function<bool(const Row &)> predicate) const {

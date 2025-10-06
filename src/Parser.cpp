@@ -54,6 +54,9 @@ InsertStmt Parser::parseInsert() {
   std::vector<std::string> values;
   while (peek() != ")") {
     values.push_back(next());
+    if (peek() != ")") {
+      expect(",");
+    }
   }
   return InsertStmt{tableName, values};
 }
