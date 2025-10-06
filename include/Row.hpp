@@ -25,6 +25,7 @@ public:
   static Row deserialize(const Schema &schema, const uint8_t *data);
 
   static bool validType(const std::vector<Row::FieldValue>& values, Schema schema);
+  static std::vector<Row::FieldValue> parse(const std::vector<std::string> &values, Schema schema);
   
   std::string print(const Schema& schema) const;
 

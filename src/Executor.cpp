@@ -4,11 +4,12 @@
 
 using namespace Statements;
 
-Table *Executor::getTable(const std::string &name) {
+Table &Executor::getTable(const std::string &name) {
   auto it = tables.find(name);
-  if (it == tables.end())
-    return nullptr; // doesn’t exist
-  return &it->second;
+  if (it == tables.end()) {
+    throw std::runtime_error("Table not found.");
+  }
+  return it->second;
 }
 
 void Executor::execute(const CreateTableStmt& stmt) {
@@ -16,9 +17,15 @@ void Executor::execute(const CreateTableStmt& stmt) {
     throw std::runtime_error("Table already created.");
   }
   tables.emplace(stmt.tableName, Table(stmt.tableName));
-  Table *t = getTable(stmt.tableName);
+  Table &t = getTable(stmt.tableName);
   for (auto f : stmt.fields) {
-    t->schema.addField(f.name, f.type);
+    t.schema.addField(f.name, f.type);
   }
+}
+
+void Executor::execute(const Statements::InsertStmt &stmt) {
+  Table& t = getTable(stmt.tableName);
+  std::vector<Row::FieldValue> actual_vals = Row::parse(stmt.fields, t.schema);
+  t.insertRow(actual_vals);
 }
 

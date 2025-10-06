@@ -9,9 +9,9 @@
 class Executor {
 public:
   void execute(const Statements::CreateTableStmt &stmt);
-  // More coming soon
+  void execute(const Statements::InsertStmt &stmt);
 
 private:
-  Table *getTable(const std::string &name);
+  Table &getTable(const std::string &name);
   std::map<std::string, Table> tables;
 };

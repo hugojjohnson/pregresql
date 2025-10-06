@@ -172,6 +172,53 @@ bool Row::validType(const std::vector<Row::FieldValue> &values, Schema schema) {
   return true;
 }
 
+// Parses a vector of strings into a set that actually matches the schema.
+std::vector<Row::FieldValue> Row::parse(const std::vector<std::string> &values, Schema schema) {
+  if (values.size() != schema.getNumFields()) {
+    std::ostringstream oss;
+    oss << "Number of values to insert, " << values.size();
+    oss << ", does not match the number of values in the schema, " << schema.getNumFields() << ".\n";
+    throw std::runtime_error(oss.str());
+  }
+
+  std::vector<Row::FieldValue> output_values;
+  for (int i = 0; i < values.size(); i++) {
+    Schema::Field f = schema.getField(i);
+    std::string v = values[i];
+    // deal with null
+    if (f.can_be_null && values[i] == "NULL") {
+      output_values.push_back(std::nullopt);
+      continue;
+    }
+
+    // cast to relevant type
+    // For each type, check if it is valid and add it. Throw error if it cannot be parsed.
+    size_t idx;
+    int value_i;
+    float value_f;
+    switch (f.type) {
+    case Schema::FieldType::INT:
+      value_i = std::stoi(v, &idx);
+      if (idx != v.size()) {
+        throw std::invalid_argument("Extra junk after number");
+      }
+      output_values.push_back(value_i);
+      break;
+    case Schema::FieldType::FLOAT:
+      value_f = std::stof(v, &idx);
+      if (idx != v.size()) {
+        throw std::invalid_argument("Extra junk after number");
+      }
+      output_values.push_back(value_f);
+      break;
+    case Schema::FieldType::STRING:
+      output_values.push_back(v);
+      break;
+    }
+  }
+  return output_values;
+}
+
 std::string Row::print(const Schema &schema) const {
   std::stringstream ss;
   int i = 0;

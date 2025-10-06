@@ -15,6 +15,9 @@ StatementVariant Parser::parse(std::string& input) {
   if (peek() == "CREATE") {
     return parseCreateTable();
   }
+  if (peek() == "INSERT") {
+    return parseInsert();
+  }
   throw std::runtime_error("Statement not found.");
 }
 
@@ -38,6 +41,20 @@ CreateTableStmt Parser::parseCreateTable() {
   }
   expect(")");
   return CreateTableStmt{name, fields};
+}
+
+InsertStmt Parser::parseInsert() {
+  expect("INSERT");
+  expect("INTO");
+  std::string tableName = next();
+  expect("VALUES");
+  expect("(");
+
+  std::vector<std::string> values;
+  while (peek() != ")") {
+    values.push_back(next());
+  }
+  return InsertStmt{tableName, values};
 }
 
 void Parser::tokenize(const std::string &input) {

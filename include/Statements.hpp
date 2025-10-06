@@ -1,5 +1,6 @@
 #pragma once
 #include "Schema.hpp"
+#include "Row.hpp"
 #include <string>
 #include <variant>
 #include <vector>
@@ -17,8 +18,8 @@ struct CreateTableStmt {
 
 struct InsertStmt {
   std::string tableName;
-  std::vector<int> fields;
+  std::vector<std::string> fields;
 };
 
-using StatementVariant = std::variant<CreateTableStmt>;
+using StatementVariant = std::variant<CreateTableStmt, InsertStmt>;
 }

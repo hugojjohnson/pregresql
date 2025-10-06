@@ -16,6 +16,7 @@ public:
   Statements::StatementVariant parse(std::string &input);
 
   Statements::CreateTableStmt parseCreateTable();
+  Statements::InsertStmt parseInsert();
   // More to come soon!
 
 private:

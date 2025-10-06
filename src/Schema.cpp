@@ -39,13 +39,7 @@ void Schema::load(std::vector<uint8_t> data) {
   pkIndex = reader.read_le<uint8_t>();
   pkIndex = 0;
 
-  [[maybe_unused]] auto _ = reader.read_le<uint32_t>(); // Row length: Coming soon.
-
-  // Useful helper function for displaying bytes from a vector<uint8_t>.
-  // for (uint8_t byte : data) {
-  //   // Cast to int so it prints as a number instead of a char
-  //   std::cout << std::hex << std::setw(2) << std::setfill('0') << (int)byte << " ";
-  // }
+  [[maybe_unused]] auto _ = reader.read_le<uint32_t>(); // Row length: currently unused.
 
   for (int i = 0; i < num_of_fields; i++) {
     uint16_t field_type = reader.read_le<uint16_t>();
@@ -55,7 +49,6 @@ void Schema::load(std::vector<uint8_t> data) {
     auto name = reader.read_string(field_name_length);
     addField(name, parseFieldType(field_type), field_max_size, can_be_null);
   }
-  // std::cout << "Header size: " << header_size;
 }
 
 std::vector<uint8_t> Schema::serialize() const {
@@ -96,10 +89,6 @@ std::vector<uint8_t> Schema::serialize() const {
     utils::push_back_bytes(buffer, field_name_length);
     buffer.insert(buffer.end(), f.name.begin(), f.name.end());
   }
-
-  // int v = std::get<int>(val);
-  // uint8_t *p = reinterpret_cast<uint8_t *>(&v);
-  // buffer.insert(buffer.end(), p, p + sizeof(int));
 
   uint32_t header_size = buffer.size() + 4;
   utils::push_front_bytes(buffer, header_size);
@@ -150,7 +139,6 @@ size_t Schema::getRowLength() const {
 }
 
 size_t Schema::getBitmapLength() const {
-  // Number of bytes needed = ceil(num_fields / 8)
   return (getNumFields() + 7) / 8;
 }
 
