@@ -2,6 +2,8 @@
 #include "../include/Schema.hpp"
 #include "../include/Statements.hpp"
 #include "Table.hpp"
+#include <algorithm>
+#include <cctype> // for std::isalnum
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
@@ -10,7 +12,7 @@
 
 using namespace Statements;
 
-StatementVariant Parser::parse(std::string& input) {
+StatementVariant Parser::parse(const std::string &input) {
   tokenize(input);
   if (peek() == "CREATE") {
     return parseCreateTable();
@@ -20,7 +22,6 @@ StatementVariant Parser::parse(std::string& input) {
   }
   throw std::runtime_error("Statement not found.");
 }
-
 
 CreateTableStmt Parser::parseCreateTable() {
   expect("CREATE");
@@ -58,26 +59,34 @@ InsertStmt Parser::parseInsert() {
 }
 
 void Parser::tokenize(const std::string &input) {
+  if (input == "") {
+    return;
+  }
   pos = 0;
   tokens.clear();
   std::istringstream iss(input);
   std::string token;
   while (iss >> token) {
-    // split off commas and parentheses
-    if (token.back() == ',' || token.back() == ')') {
-      char c = token.back();
-      token.pop_back();
-      if (!token.empty()) {
-        tokens.push_back(token);
-      }
-      tokens.emplace_back(1, c);
-    } else if (token.front() == '(') {
-      tokens.emplace_back("(");
+    char front = token.front();
+    char back = token.back();
+    bool add_back = false;
+    if (front == ',' || front == '(') {
+      tokens.emplace_back(1, front);
       token = token.substr(1);
-      if (!token.empty())
-        tokens.push_back(token);
-    } else {
-      tokens.push_back(token);
+    }
+    if (back == ',' || back == ')') {
+      token = token.substr(0, token.size() - 1);
+      add_back = true;
+    }
+    bool is_alnum = std::all_of(token.begin(), token.end(), [](unsigned char c) { 
+      return std::isalnum(c) || c == '.';
+    });
+    if (!is_alnum) {
+      throw std::runtime_error("Invalid token: Spaces are needed. My bad.");
+    }
+    tokens.push_back(token);
+    if (add_back) {
+      tokens.emplace_back(1, back);
     }
   }
 }

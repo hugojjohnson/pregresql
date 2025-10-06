@@ -13,11 +13,13 @@ class Parser {
 public:
   explicit Parser() {}
 
-  Statements::StatementVariant parse(std::string &input);
+  Statements::StatementVariant parse(const std::string &input);
+  friend bool test_tokeniser();
 
   Statements::CreateTableStmt parseCreateTable();
   Statements::InsertStmt parseInsert();
   // More to come soon!
+
 
 private:
   std::vector<std::string> tokens;
